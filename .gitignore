@@ -1,0 +1,5 @@
+DATA/
+temp/
+__pycache__/
+.env
+codex.txt
