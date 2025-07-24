@@ -79,3 +79,8 @@ class LLMResponseState(BaseModel):
     retrieved_docs: List[Document] = Field(default_factory=list)
     answer: str = ""
     source_context: str = ""
+    
+# Define MCP input schema for GeneralAgent
+class GeneralAgentInput(TypedDict):
+    query: str
+    response: str

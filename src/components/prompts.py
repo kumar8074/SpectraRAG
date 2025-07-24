@@ -13,3 +13,6 @@ GENERATE_QUERIES_SYSTEM_PROMPT = """\
 Generate 3 search queries to search for to answer the user's question. \
 These search queries should be diverse in nature - do not generate \
 repetitive ones."""
+
+# System prompt for general queries
+GENERAL_SYSTEM_PROMPT = "You are a helpful Assistant, Answer the user's question using your knowledge."
