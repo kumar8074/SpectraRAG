@@ -4,7 +4,7 @@
 # Description: This file defines the state schemas used by the Agents. 
 # Author: LALAN KUMAR
 # Created: [22-07-2025]
-# Updated: [23-07-2025]
+# Updated: [24-07-2025]
 # LAST MODIFIED BY: LALAN KUMAR [https://github.com/kumar8074]
 # Version: 1.0.0
 # ===================================================================================
@@ -28,22 +28,22 @@ class BaseVectorDBState(BaseModel):
     vector_db_ready: bool = False
     embedding_provider: str = "gemini"
     llm_provider: str = "gemini"
+    session_id: str = ""  # Added session_id
 
 class EmbederState(BaseVectorDBState):
     file_path: str
     file_exists: bool = False
     documents: list[Document] = []
     
-# MCP Input/Output schemas for Embedder
 class EmbedderInput(TypedDict):
     file_path: str
     vector_db_path: str
+    session_id: str  # Added session_id
 
 class EmbedderOutput(TypedDict):
     success: bool
     message: str
     
-
 class RetrieverState(BaseVectorDBState):
     retriever_path: str
     retriever_ready: bool = False
@@ -58,29 +58,25 @@ class RetrieverInput(TypedDict):
     vector_db_path: str
     retriever_path: str
     query: str
+    session_id: str  # Added session_id
     
 class RetrieverOutput(TypedDict):
     retrieved_docs: List[Document]
     
-    
-# Define MCP input schema for LLMResponseAgent
 class LLMResponseInput(TypedDict):
     query: str
     retrieved_docs: List[Document]
 
-# Define MCP output schema for LLMResponseAgent
 class LLMResponseOutput(TypedDict):
     answer: str
     source_context: str
 
-# Define internal state model
 class LLMResponseState(BaseModel):
     query: str
     retrieved_docs: List[Document] = Field(default_factory=list)
     answer: str = ""
     source_context: str = ""
     
-# Define MCP input schema for GeneralAgent
 class GeneralAgentInput(TypedDict):
     query: str
     response: str

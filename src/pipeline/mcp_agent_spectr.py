@@ -4,7 +4,7 @@
 # Description: This file orchestrates the MCP agents to enable MCP communication.
 # Author: LALAN KUMAR
 # Created: [23-07-2025]
-# Updated: [23-07-2025]
+# Updated: [24-07-2025]
 # LAST MODIFIED BY: LALAN KUMAR [https://github.com/kumar8074]
 # Version: 1.0.0
 # ===================================================================================
@@ -27,16 +27,15 @@ from src.logger import logging
 class MCPSpectraRagController:
     """Enhanced RAG Controller with MCP communication"""
     
-    def __init__(self):
-        self.coordinator = MCPCoordinator()
+    def __init__(self, session_id: str):
+        self.coordinator = MCPCoordinator(session_id)
+        self.session_id = session_id
         self.initialized = False
     
     async def initialize(self):
         """Initialize all MCP agents"""
         if not self.initialized:
             await self.coordinator.initialize()
-            # Start agent listeners in background
-            asyncio.create_task(self.coordinator.start_agent_listeners())
             self.initialized = True
             logging.info("MCP RAG Controller initialized")
     
@@ -49,7 +48,6 @@ class MCPSpectraRagController:
         logging.info(f"Query: {query}")
         logging.info("=" * 60)
 
-        # Route to correct workflow based on file_path and query
         result = await self.coordinator.process_user_query(file_path, query)
 
         logging.info("=" * 60)
@@ -58,7 +56,6 @@ class MCPSpectraRagController:
             for i, msg in enumerate(result["message_history"], 1):
                 logging.info(f"{i}. {msg['sender']} → {msg['receiver']}: {msg['type']}")
 
-        # Propagate vector_db_ready for embedding-only, answer for RAG/GEN
         if result.get("vector_db_ready"):
             return {
                 "vector_db_ready": True,

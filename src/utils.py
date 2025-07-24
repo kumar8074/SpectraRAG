@@ -4,7 +4,7 @@
 # Description: This file contains various utility functions used in the project.
 # Author: LALAN KUMAR
 # Created: [22-07-2025]
-# Updated: [22-07-2025]
+# Updated: [24-07-2025]
 # LAST MODIFIED BY: LALAN KUMAR [https://github.com/kumar8074]
 # Version: 1.0.0
 # ===================================================================================
@@ -204,6 +204,9 @@ def _format_doc(doc: Document) -> str:
 # ui_utils.py
 # ===================================================================================
 import streamlit as st
+import os
+import shutil
+import time
 
 def apply_custom_styling():
     """Apply custom styling to the Streamlit app"""
@@ -263,7 +266,6 @@ def apply_custom_styling():
         color: #00FFAA !important;
     }
     
-    /* Style for upload button */
     .stButton button {
         background-color: #1E1E1E !important;
         color: #00FFAA !important;
@@ -279,7 +281,6 @@ def apply_custom_styling():
         border: 1px solid #00FFAA !important;
     }
     
-    /* Document list styling */
     .document-list {
         margin-top: 10px;
     }
@@ -292,7 +293,6 @@ def apply_custom_styling():
         border-left: 3px solid #00FFAA;
     }
     
-    /* File type badges */
     .file-badge {
         display: inline-block;
         padding: 2px 6px;
@@ -322,7 +322,6 @@ def apply_custom_styling():
         color: white;
     }
     
-    /* Custom document expander */
     .document-expander {
         border: 1px solid #3A3A3A;
         border-radius: 5px;
@@ -333,7 +332,9 @@ def apply_custom_styling():
 
 def cleanup_session_files():
     """Clean up session files and vector DB when session ends"""
-    import shutil
+    session_id = st.session_state.get("session_id", None)
+    if not session_id:
+        return
     
     # Clean up uploaded files
     if "last_uploaded_file" in st.session_state and st.session_state.last_uploaded_file:
@@ -354,13 +355,28 @@ def cleanup_session_files():
             print(f"Error cleaning up temp uploads directory: {e}")
     
     # Clean up vector DB
-    vector_db_path = "DATA/vector_db"
+    vector_db_path = f"DATA/vector_db_{session_id}"
     if os.path.exists(vector_db_path):
         try:
             shutil.rmtree(vector_db_path)
             print(f"Cleaned up vector DB: {vector_db_path}")
         except Exception as e:
             print(f"Error cleaning up vector DB: {e}")
+    
+    # Clean up retriever cache
+    retriever_path = f"DATA/retriever_cache_{session_id}"
+    if os.path.exists(retriever_path):
+        try:
+            shutil.rmtree(retriever_path)
+            print(f"Cleaned up retriever cache: {retriever_path}")
+        except Exception as e:
+            print(f"Error cleaning up retriever cache: {e}")
+    
+    # Clean up message bus
+    from src.mcp.message_protocol import message_buses
+    if session_id in message_buses:
+        del message_buses[session_id]
+        print(f"Cleaned up message bus for session: {session_id}")
     
     # Reset session state
     session_keys_to_reset = [
@@ -417,7 +433,6 @@ def initialize_session_state():
 
 def display_file_badge(file_type):
     """Generate HTML for a file type badge"""
-    # Determine badge class based on file type
     badge_class = "file-badge"
     if file_type.lower() in ["pdf"]:
         badge_class += " file-badge-pdf"

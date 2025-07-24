@@ -152,13 +152,42 @@ All agents are orchestrated through the `MCPCoordinator` and communicate asynchr
 
 ## Usage
 
-### 1. Install Dependencies
+### 1. Create a Virtual Environment
+
+It's recommended to create a virtual environment to isolate the project dependencies:
+
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
+```
+
+### 2. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Run the Application
+### 3. Set Up API Keys
+
+Create a `.env` file in the project root directory and add your API keys:
+
+```bash
+# Copy the example file (if available) or create a new .env file
+cp .env.example .env
+
+# Edit the .env file and add your API keys:
+# OPENAI_API_KEY=your_openai_api_key_here
+# ANTHROPIC_API_KEY=your_anthropic_api_key_here
+# Add other required API keys as needed
+```
+
+### 4. Run the Application
 
 ```bash
 streamlit run app.py
@@ -184,8 +213,8 @@ streamlit run app.py
 
 ## Acknowledgements
 
-- Built by Lalan Kumar.
-- Uses LangChain, Streamlit, and other open-source technologies.
+- Built by [Lalan Kumar](https://github.com/kumar8074).
+- Uses [LangChain](https://github.com/langchain-ai/langchain), [LangGraph](https://github.com/langchain-ai/langgraph), [Streamlit](https://github.com/streamlit/streamlit), and other open-source technologies.
 
 ---
 

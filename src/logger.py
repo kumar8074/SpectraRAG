@@ -1,6 +1,6 @@
 # ===================================================================================
 # Project: SpectraRAG
-# File: logger.py
+# File: src/logger.py
 # Description: This script sets up a logging configuration for the project. It creates a directory for logs if it doesn't exist and configures the logging format and level. The log file is named with the current date and time.
 #              The logging messages include the timestamp, line number, logger name, log level,
 #              and the actual log message.

@@ -2,7 +2,7 @@
 # Project: SpectraRAG
 # File: src/pipeline/agent_spectr.py
 # Purpose: This file orchestrates the workflow of the SpectraRAG pipeline using multiple agents
-#          including EmbedderAgent, RetrieverAgent, and LLMResponseAgent.
+#          including EmbedderAgent, RetrieverAgent, and LLMResponseAgent.(legacy)
 # Author: LALAN KUMAR
 # Created: [23-07-2025]
 # Updated: [23-07-2025]

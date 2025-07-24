@@ -1,3 +1,14 @@
+# ===================================================================================
+# Project: SpectraRAG
+# File: src/Agents/general_agent.py
+# Description: This file creates the general Agent. 
+# Author: LALAN KUMAR
+# Created: [23-07-2025]
+# Updated: [23-07-2025]
+# LAST MODIFIED BY: LALAN KUMAR [https://github.com/kumar8074]
+# Version: 1.0.0
+# ===================================================================================
+
 import os
 import sys
 import asyncio

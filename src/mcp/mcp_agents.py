@@ -4,7 +4,7 @@
 # Description: This file wraps the Agents to enable MCP communication.
 # Author: LALAN KUMAR
 # Created: [23-07-2025]
-# Updated: [23-07-2025]
+# Updated: [24-07-2025]
 # LAST MODIFIED BY: LALAN KUMAR [https://github.com/kumar8074]
 # Version: 1.0.0
 # ===================================================================================
@@ -21,7 +21,7 @@ project_root = os.path.abspath(os.path.join(current_file_path, "../../.."))
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from src.mcp.message_protocol import MCPMessage, MCPMessageType, message_bus
+from src.mcp.message_protocol import MCPMessage, MCPMessageType, get_message_bus
 from src.Agents.embedder_agent import create_embedder_agent, EmbederState, EmbedderInput
 from src.Agents.retriever_agent import create_retriever_agent, RetrieverState, RetrieverInput
 from src.Agents.response_agent import create_llm_response_agent, LLMResponseState, LLMResponseInput
@@ -30,33 +30,31 @@ from src.Agents.general_agent import create_general_agent, GeneralAgentInput
 class MCPIngestionAgent:
     """MCP-enabled Ingestion Agent wrapper"""
     
-    def __init__(self):
+    def __init__(self, session_id: str):
         self.agent_name = "IngestionAgent"
+        self.session_id = session_id
         self.embedder_graph = create_embedder_agent()
         self.message_queue = None
     
     async def initialize(self):
         """Initialize MCP communication"""
+        message_bus = get_message_bus(self.session_id)
         self.message_queue = await message_bus.subscribe(self.agent_name)
     
     async def process_ingestion_request(self, message: MCPMessage) -> MCPMessage:
         """Process document ingestion request"""
         try:
-            # Extract payload
             file_path = message.payload.get("file_path")
-            vector_db_path = message.payload.get("vector_db_path", "DATA/vector_db")
+            vector_db_path = message.payload.get("vector_db_path", f"DATA/vector_db_{self.session_id}")
             
-            # Create embedder input
             embedder_input = EmbedderInput(
                 file_path=file_path,
                 vector_db_path=vector_db_path
             )
             
-            # Process through embedder graph
             embedder_state = EmbederState(**embedder_input)
             result = self.embedder_graph.invoke(embedder_state)
             
-            # Create response message
             response = MCPMessage(
                 sender=self.agent_name,
                 receiver=message.sender,
@@ -72,9 +70,7 @@ class MCPIngestionAgent:
             )
             
             return response
-            
         except Exception as e:
-            # Return error response
             return MCPMessage(
                 sender=self.agent_name,
                 receiver=message.sender,
@@ -86,35 +82,33 @@ class MCPIngestionAgent:
                 }
             )
 
-
 class MCPRetrievalAgent:
     """MCP-enabled Retrieval Agent wrapper"""
     
-    def __init__(self):
+    def __init__(self, session_id: str):
         self.agent_name = "RetrievalAgent"
+        self.session_id = session_id
         self.retriever_graph = create_retriever_agent()
         self.message_queue = None
     
     async def initialize(self):
         """Initialize MCP communication"""
+        message_bus = get_message_bus(self.session_id)
         self.message_queue = await message_bus.subscribe(self.agent_name)
     
     async def process_retrieval_request(self, message: MCPMessage) -> MCPMessage:
         """Process document retrieval request"""
         try:
-            # Extract payload
             query = message.payload.get("query")
             vector_db_path = message.payload.get("vector_db_path")
-            retriever_path = message.payload.get("retriever_path", "DATA/retriever_cache")
+            retriever_path = message.payload.get("retriever_path", f"DATA/retriever_cache_{self.session_id}")
             
-            # Create retriever input
             retriever_input = RetrieverInput(
                 vector_db_path=vector_db_path,
                 retriever_path=retriever_path,
                 query=query
             )
             
-            # Process through retriever graph
             retriever_state = RetrieverState(
                 vector_db_path=retriever_input["vector_db_path"],
                 retriever_path=retriever_input["retriever_path"],
@@ -125,7 +119,6 @@ class MCPRetrievalAgent:
             
             result = await self.retriever_graph.ainvoke(retriever_state)
             
-            # Serialize documents for MCP transfer
             retrieved_docs = result.get("retrieved_docs", [])
             serialized_docs = []
             for doc in retrieved_docs:
@@ -134,7 +127,6 @@ class MCPRetrievalAgent:
                     "metadata": doc.metadata
                 })
             
-            # Create response message
             response = MCPMessage(
                 sender=self.agent_name,
                 receiver=message.sender,
@@ -148,9 +140,7 @@ class MCPRetrievalAgent:
             )
             
             return response
-            
         except Exception as e:
-            # Return error response
             return MCPMessage(
                 sender=self.agent_name,
                 receiver=message.sender,
@@ -162,23 +152,23 @@ class MCPRetrievalAgent:
 class MCPLLMResponseAgent:
     """MCP-enabled LLM Response Agent wrapper"""
     
-    def __init__(self):
+    def __init__(self, session_id: str):
         self.agent_name = "LLMResponseAgent"
+        self.session_id = session_id
         self.llm_graph = create_llm_response_agent()
         self.message_queue = None
     
     async def initialize(self):
         """Initialize MCP communication"""
+        message_bus = get_message_bus(self.session_id)
         self.message_queue = await message_bus.subscribe(self.agent_name)
     
     async def process_llm_request(self, message: MCPMessage) -> MCPMessage:
         """Process LLM response generation request"""
         try:
-            # Extract payload
             query = message.payload.get("query")
             retrieved_docs_data = message.payload.get("retrieved_docs", [])
             
-            # Deserialize documents
             retrieved_docs = []
             for doc_data in retrieved_docs_data:
                 doc = Document(
@@ -187,17 +177,14 @@ class MCPLLMResponseAgent:
                 )
                 retrieved_docs.append(doc)
             
-            # Create LLM input
             llm_input = LLMResponseInput(
                 query=query,
                 retrieved_docs=retrieved_docs
             )
             
-            # Process through LLM graph
             llm_state = LLMResponseState(**llm_input)
             result = self.llm_graph.invoke(llm_state)
             
-            # Create response message
             response = MCPMessage(
                 sender=self.agent_name,
                 receiver=message.sender,
@@ -211,9 +198,7 @@ class MCPLLMResponseAgent:
             )
             
             return response
-            
         except Exception as e:
-            # Return error response
             return MCPMessage(
                 sender=self.agent_name,
                 receiver=message.sender,
@@ -222,29 +207,27 @@ class MCPLLMResponseAgent:
                 payload={"error": str(e)}
             )
 
-
 class MCPGeneralAgent:
     """MCP-enabled General Agent wrapper for general queries"""
-    def __init__(self):
+    
+    def __init__(self, session_id: str):
         self.agent_name = "GeneralAgent"
+        self.session_id = session_id
         self.general_graph = create_general_agent()
         self.message_queue = None
 
     async def initialize(self):
         """Initialize MCP communication"""
+        message_bus = get_message_bus(self.session_id)
         self.message_queue = await message_bus.subscribe(self.agent_name)
 
     async def process_general_query(self, message: MCPMessage) -> MCPMessage:
         """Process general query request"""
         try:
-            # Extract payload
             query = message.payload.get("query")
-            # Prepare input for the general agent
             agent_input = GeneralAgentInput(query=query)
-            # Run the agent graph (async)
             result = await self.general_graph.ainvoke(agent_input)
             answer = result["response"].content if hasattr(result["response"], "content") else str(result["response"])
-            # Create response message
             response = MCPMessage(
                 sender=self.agent_name,
                 receiver=message.sender,
@@ -257,7 +240,6 @@ class MCPGeneralAgent:
             )
             return response
         except Exception as e:
-            # Return error response
             return MCPMessage(
                 sender=self.agent_name,
                 receiver=message.sender,

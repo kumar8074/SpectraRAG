@@ -4,7 +4,7 @@
 # Description: This file defines the message protocol used by the Agents.
 # Author: LALAN KUMAR
 # Created: [23-07-2025]
-# Updated: [23-07-2025]
+# Updated: [24-07-2025]
 # LAST MODIFIED BY: LALAN KUMAR [https://github.com/kumar8074]
 # Version: 1.0.0
 # ===================================================================================
@@ -56,7 +56,8 @@ class MCPMessage:
 class MCPMessageBus:
     """In-memory message bus for MCP communication"""
     
-    def __init__(self):
+    def __init__(self, session_id: str):
+        self.session_id = session_id
         self.message_queue: Dict[str, List[MCPMessage]] = {}
         self.subscribers: Dict[str, asyncio.Queue] = {}
         self.message_history: List[MCPMessage] = []
@@ -72,10 +73,7 @@ class MCPMessageBus:
     async def publish(self, message: MCPMessage) -> bool:
         """Publish a message to the bus"""
         async with self._lock:
-            # Add to history
             self.message_history.append(message)
-            
-            # Route to specific receiver
             if message.receiver in self.subscribers:
                 await self.subscribers[message.receiver].put(message)
                 return True
@@ -85,13 +83,8 @@ class MCPMessageBus:
     
     async def send_and_wait_response(self, message: MCPMessage, timeout: float = 30.0) -> Optional[MCPMessage]:
         """Send message and wait for response"""
-        # Subscribe to responses for this sender
         response_queue = await self.subscribe(message.sender)
-        
-        # Send the message
         await self.publish(message)
-        
-        # Wait for response with the same trace_id
         try:
             start_time = time.time()
             while time.time() - start_time < timeout:
@@ -100,7 +93,6 @@ class MCPMessageBus:
                     if response.trace_id == message.trace_id:
                         return response
                     else:
-                        # Put back if not our response
                         await response_queue.put(response)
                 except asyncio.TimeoutError:
                     continue
@@ -115,6 +107,12 @@ class MCPMessageBus:
             return [msg for msg in self.message_history if msg.trace_id == trace_id]
         return self.message_history.copy()
 
-# Global message bus instance
-message_bus = MCPMessageBus()
+# Session-specific message bus storage
+message_buses = {}  # Keyed by session_id
+
+def get_message_bus(session_id: str) -> MCPMessageBus:
+    """Get or create a session-specific message bus"""
+    if session_id not in message_buses:
+        message_buses[session_id] = MCPMessageBus(session_id)
+    return message_buses[session_id]
 
