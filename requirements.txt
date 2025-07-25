@@ -7,7 +7,6 @@ langgraph
 langsmith
 streamlit
 python-dotenv
-agentic-doc
 pdfplumber
 chromadb
 unstructured[pptx]

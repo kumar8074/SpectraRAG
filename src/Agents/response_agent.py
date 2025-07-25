@@ -47,13 +47,7 @@ def call_llm(state: LLMResponseState) -> LLMResponseState:
     """
     # Call the LLM synchronously
     response = llm.invoke([{"role": "user", "content": prompt}])
-    # Extract answer text
-    if isinstance(response, dict):
-        # Some LLMs return dict with 'content'
-        answer_text = response.get("content", "")
-    else:
-        answer_text = str(response)
-    state.answer = answer_text.strip()
+    state.answer = response.content
     return state
 
 # Finalize MCP output
