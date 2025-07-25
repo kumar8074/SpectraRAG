@@ -1,6 +1,5 @@
 DATA/
 temp_uploads/
-logs/
 __pycache__/
 .env
 .vscode/

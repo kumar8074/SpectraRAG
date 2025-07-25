@@ -77,7 +77,7 @@ SpectraRAG/
 ├── assets/              # Static assets (e.g., images)
 ├── DATA/                # VectorDB storage (gitignored)
 ├── temp_uploads/        # Uploaded files (gitignored)
-├── logs/                # Log files (gitignored)
+├── logs/                # Log files
 │
 ├── src/
 │   ├── Agents/
